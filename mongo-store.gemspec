@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
      "lib/mongo-store.rb",
      "lib/rack/session/mongo.rb",
      "mongo-store.gemspec",
+     "spec/rack-mongo-store_spec.rb",
      "spec/spec.opts",
      "spec/spec_helper.rb"
   ]
