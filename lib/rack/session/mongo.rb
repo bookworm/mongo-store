@@ -74,6 +74,7 @@ module Rack
           save_session(sid)
         end
         session.instance_variable_set('@old', {}.merge(session))
+        session.instance_variable_set('@sid', sid)
         return [sid, session]
       ensure
         @mutex.unlock if env['rack.multithread']
