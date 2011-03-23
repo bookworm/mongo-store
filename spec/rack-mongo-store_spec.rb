@@ -30,8 +30,8 @@ describe 'Rack::Session::Mongo' do
       :collection => 'mongo-test')
     pool = mongo.pool
     connection = mongo.connection
-    
-    connection.host.should == 'localhost'
+
+    connection.primary[0].should == 'localhost'
     
     pool.should be_kind_of(Mongo::Collection)
     pool.db.name.should == 'rack-test'
