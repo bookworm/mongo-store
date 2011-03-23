@@ -14,7 +14,7 @@ module Rack
     #     use Rack::Session::Mongo, :connection => @existing_mongodb_connection,
     #                               :expire_after => 1800
     class Mongo < Abstract::ID
-      attr_reader :mutex, :pool, :connection
+      attr_reader :mutex, :pool, :connection, :marshal_data
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :db => 'rack', :collection => 'sessions', :drop => false
       
       # Creates a new Mongo session store pool. You probably won't initialize
@@ -35,6 +35,8 @@ module Rack
       #   instance global</i>
       # @option options [String] :collection ('sessions') the Mongo collection
       #   to use. — <i>pool instance global</i>
+      # @option options [boolean] :marshal_data (true) Marshal data into string 
+      #   otherwise store as hash in db. — <i>pool instance global</i>
       # @option options [Integer] :expire_after (nil) the time in seconds for
       #   the session to last for. *Example:* If this is set to +1800+, the
       #   session will be deleted if the client doesn't make a request within 30
@@ -59,6 +61,7 @@ module Rack
         @connection = @default_options[:connection] || ::Mongo::Connection.new
         @pool = @connection.db(@default_options[:db]).collection(@default_options[:collection])
         @pool.create_index('sid', :unique => true)
+        @marshal_data = options[:marshal_data].nil? ? true : options[:marshal_data] == true
       end
       
       def get_session(env, sid)
@@ -135,12 +138,20 @@ module Rack
         end
       
         def pack(data)
-          [Marshal.dump(data)].pack("m*")
+          if(@marshal_data)
+            [Marshal.dump(data)].pack("m*")
+          else
+            data
+          end
         end
 
         def unpack(packed)
           return nil unless packed
-          Marshal.load(packed.unpack("m*").first)
+          if(@marshal_data)
+            Marshal.load(packed.unpack("m*").first)
+          else
+            packed
+          end
         end
     end
   end

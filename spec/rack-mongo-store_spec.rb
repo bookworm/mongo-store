@@ -27,7 +27,7 @@ describe 'Rack::Session::Mongo' do
   it 'should specify connection params' do
     mongo = Rack::Session::Mongo.new(@incrementor,
       :connection => Mongo::Connection.new('localhost'), :db => 'rack-test',
-      :collection => 'mongo-test')
+      :collection => 'mongo_test')
     pool = mongo.pool
     connection = mongo.connection
 
@@ -35,7 +35,7 @@ describe 'Rack::Session::Mongo' do
     
     pool.should be_kind_of(Mongo::Collection)
     pool.db.name.should == 'rack-test'
-    pool.name.should == 'mongo-test'
+    pool.name.should == 'mongo_test'
   end
 
   it 'creates a new cookie' do
@@ -128,7 +128,20 @@ describe 'Rack::Session::Mongo' do
     res3['Set-Cookie'][@session_match].should == new_session
     res3.body.should == '{"counter"=>4}'
   end
-
+  it 'should default marshal_data to true' do
+    pool = Rack::Session::Mongo.new(@incrementor)
+    pool.marshal_data.should ==  true
+    data = {'test' => true}
+    pool.send(:pack, data).should  == [Marshal.dump(data)].pack("m*")
+    pool.send(:unpack, [Marshal.dump(data)].pack("m*"))['test']  == true
+  end
+  it 'should be able to set marshal_data to false' do
+    pool = Rack::Session::Mongo.new(@incrementor, :marshal_data => false)
+    pool.marshal_data.should ==  false
+    data = {'test' => true}
+    pool.send(:pack, data).should  === data
+    pool.send(:unpack, data).should === data
+  end
   specify 'omits cookie with :defer option' do
     pool = Rack::Session::Mongo.new(@incrementor)
     req = Rack::MockRequest.new(pool)
