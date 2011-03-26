@@ -30,7 +30,11 @@ describe 'Rack::Session::Mongo' do
       :collection => 'mongo_test')
     pool = mongo.pool
     connection = mongo.connection
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/feature_spec_fixes
     connection.primary[0].should == 'localhost'
     
     pool.should be_kind_of(Mongo::Collection)
