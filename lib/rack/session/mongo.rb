@@ -11,7 +11,7 @@ module Rack
     #
     # == Usage Example
     #
-    #     use Rack::Session::Mongo, :connection => @existing_mongodb_connection,
+    #     use Rack::Session::Mongo, :connection => @existing_mongodb_connection;,
     #                               :expire_after => 1800
     class Mongo < Abstract::ID
       attr_reader :mutex, :pool, :connection, :marshal_data
@@ -99,13 +99,14 @@ module Rack
       end
       
       private
+
         def generate_sid
           loop do
             sid = super
             break sid unless find_session(sid)
           end
         end
-      
+        
         def find_session(sid)
           @pool.remove :expires => {'$lte' => Time.now} # clean out expired sessions 
           session = @pool.find_one :sid => sid
@@ -131,7 +132,7 @@ module Rack
           warn "//@#{sid}: dropping #{delete*','}" if $DEBUG and not delete.empty?
           delete.each{|k| current.delete k }
 
-          update = new.keys.select{|k| new[k] != old[k] }
+          update = new.keys.select{|k| new[k] != old[k] || new[k].kind_of?(Hash) || new[k].kind_of?(Array) }    
           warn "//@#{sid}: updating #{update*','}" if $DEBUG and not update.empty?
           update.each{|k| current[k] = new[k] }
 
