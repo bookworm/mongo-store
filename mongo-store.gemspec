@@ -46,12 +46,16 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<mongo-store>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
+      s.add_development_dependency(%q<yard>, [">= 0"])
       s.add_runtime_dependency(%q<mongo>, [">= 1.0.1"])
       s.add_runtime_dependency(%q<rack>, [">= 1.1.0"])
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<yard>, [">= 0"])
     else
       s.add_dependency(%q<mongo-store>, [">= 0"])
+      s.add_dependency(%q<rspec>, [">= 1.2.9"])
+      s.add_dependency(%q<yard>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<yard>, [">= 0"])
       s.add_dependency(%q<mongo>, [">= 1.0.1"])
@@ -61,6 +65,8 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<mongo-store>, [">= 0"])
+    s.add_dependency(%q<rspec>, [">= 1.2.9"])
+    s.add_dependency(%q<yard>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<yard>, [">= 0"])
     s.add_dependency(%q<mongo>, [">= 1.0.1"])
