@@ -37,10 +37,25 @@ module Rack
       #   to use. — <i>pool instance global</i>
       # @option options [boolean] :marshal_data (true) Marshal data into string 
       #   otherwise store as hash in db. — <i>pool instance global</i>
+      #   Note:  if you use this then the keys used to lookup values must be strings
+      #          even if you put in symbols.  *Example:* 
+      #       request1: session[:test] = true
+      #       request2: session[:test]
+      #             > nil
+      #                 session['test']
+      #             > true
+      # 
+      #      The advantage is that you can query the contents of the sessions and 
+      #      potentially make changes on the fly
       # @option options [Integer] :expire_after (nil) the time in seconds for
       #   the session to last for. *Example:* If this is set to +1800+, the
       #   session will be deleted if the client doesn't make a request within 30
       #   minutes of its last request.
+      # @option options [Integer] :clear_expired_after (1800) the time in seconds
+      #   before we clear out old sessions. *Example:* If this is set to +1800+, the
+      #   the session will be cleared from mongodb when a session is requested, if
+      #   it has been 1800 seconds since it was last cleared.  setting to -1 will 
+      #   disable this.
       # @option options [true, false] :defer (false) don't set the session
       #   cookie for this request.
       # @option options [true, false] :renew (false) causes the generation of
@@ -60,8 +75,11 @@ module Rack
         @mutex = Mutex.new
         @connection = @default_options[:connection] || ::Mongo::Connection.new
         @pool = @connection.db(@default_options[:db]).collection(@default_options[:collection])
+        @pool.create_index([['expires', -1]])
         @pool.create_index('sid', :unique => true)
-        @marshal_data = options[:marshal_data].nil? ? true : options[:marshal_data] == true
+        @marshal_data = @default_options[:marshal_data].nil? ? true : @default_options[:marshal_data] == true
+        @next_expire_period = nil
+        @recheck_expire_period = @default_options[:clear_expired_after].nil? ? 1800 : @default_options[:clear_expired_after].to_i
       end
       
       def get_session(env, sid)
@@ -107,8 +125,16 @@ module Rack
         end
       
         def find_session(sid)
-          @pool.remove :expires => {'$lte' => Time.now} # clean out expired sessions 
+          time = Time.now
+          if @recheck_expire_period != -1 && (@next_expire_period.nil? || @next_expire_period < time)
+            @next_expire_period = time + @recheck_expire_period
+            @pool.remove :expires => {'$lte' => time} # clean out expired sessions 
+          end
           session = @pool.find_one :sid => sid
+          #if session is expired but hasn't been cleared yet.  don't return it.
+          if session && session['expires'] != nil && session['expires'] < time
+            session = nil
+          end
           session ? unpack(session['data']) : false
         end
         
@@ -117,7 +143,7 @@ module Rack
         end
         
         def save_session(sid, session={}, expires=nil)
-          @pool.update({:sid => sid}, {:sid => sid, :data => pack(session), :expires => expires}, :upsert => true)
+          @pool.update({:sid => sid}, {"$set" => {:data => pack(session), :expires => expires}}, :upsert => true)
         end
         
         def merge_sessions(sid, old, new, current=nil)
