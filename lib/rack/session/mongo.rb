@@ -153,12 +153,12 @@ module Rack
             warn 'Bad old or new sessions provided.'
             return current
           end
-
-          delete = old.keys - new.keys
+          # delete keys that are not in common
+          delete = current.keys - (new.keys & current.keys)
           warn "//@#{sid}: dropping #{delete*','}" if $DEBUG and not delete.empty?
           delete.each{|k| current.delete k }
 
-          update = new.keys.select{|k| new[k] != old[k] || new[k].kind_of?(Hash) || new[k].kind_of?(Array) }    
+          update = new.keys.select{|k| !current.has_key?(k) || new[k] != current[k] || new[k].kind_of?(Hash) || new[k].kind_of?(Array) }    
           warn "//@#{sid}: updating #{update*','}" if $DEBUG and not update.empty?
           update.each{|k| current[k] = new[k] }
 
