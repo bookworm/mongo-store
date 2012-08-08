@@ -75,8 +75,8 @@ module Rack
         @mutex = Mutex.new
         @connection = @default_options[:connection] || ::Mongo::Connection.new
         @pool = @connection.db(@default_options[:db]).collection(@default_options[:collection])
-        @pool.create_index([['expires', -1]])
-        @pool.create_index('sid', :unique => true)
+        # @pool.create_index([['expires', -1]])
+        # @pool.create_index('sid', :unique => true)
         @marshal_data = @default_options[:marshal_data].nil? ? true : @default_options[:marshal_data] == true
         @next_expire_period = nil
         @recheck_expire_period = @default_options[:clear_expired_after].nil? ? 1800 : @default_options[:clear_expired_after].to_i
